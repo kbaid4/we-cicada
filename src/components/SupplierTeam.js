@@ -62,6 +62,7 @@ const SupplierTeam = () => {
   const navigate = useNavigate();
   const user = getUserContext();
   const [liaisons, setLiaisons] = useState([]);
+  const [connections, setConnections] = useState([]);
   const [newLiaison, setNewLiaison] = useState("");
   const [newEmail, setNewEmail] = useState("");
   const [activeNav, setActiveNav] = useState('My Team');
@@ -105,6 +106,30 @@ const SupplierTeam = () => {
     fetchLiaisons();
   }, [supplierId]);
 
+  // Load accepted connections for this supplierId from Supabase
+  useEffect(() => {
+    if (!supplierId) return;
+    async function fetchConnections() {
+      try {
+        const { data, error } = await import('../supabaseClient').then(m => m.supabase
+          .from('connection_requests')
+          .select('*')
+          .eq('supplier_id', supplierId)
+          .eq('status', 'accepted')
+          .order('created_at', { ascending: false })
+        );
+        if (!error && Array.isArray(data)) {
+          setConnections(data);
+        } else {
+          setConnections([]);
+        }
+      } catch {
+        setConnections([]);
+      }
+    }
+    fetchConnections();
+  }, [supplierId]);
+
   const addLiaison = async () => {
     console.log("addLiaison called");
     const { data: { user }, error: authError } = await import('../supabaseClient').then(m => m.supabase.auth.getUser());
@@ -121,10 +146,9 @@ const SupplierTeam = () => {
       )
     ) {
       try {
-        const adminEmail = user.email;
         const { data, error } = await import('../supabaseClient').then(m => m.supabase
           .from('liaisons')
-          .insert([{ user_id: user.id, admin_email: adminEmail, name: newLiaison.trim(), email: newEmail.trim() }])
+          .insert([{ user_id: user.id, name: newLiaison.trim(), email: newEmail.trim() }])
           .select()
         );
         console.log("insert result:", data, error);
@@ -248,10 +272,10 @@ const SupplierTeam = () => {
         <h2>Liaisons</h2>
         {(() => {
           const supplierEmail = localStorage.getItem('supplierEmail') || localStorage.getItem('signupEmail');
-          // Rows added automatically by the connection system (admin_email differs from supplier)
-          const organiserLiaisons = liaisons.filter(l => l && l.admin_email && l.admin_email !== supplierEmail);
-          // Rows the supplier added manually (admin_email matches their own email or is null)
-          const manualConnections = liaisons.filter(l => !l || (l.admin_email === supplierEmail || !l.admin_email));
+          // Filter liaisons to only show manually added liaisons (not admin connections)
+          const manualConnections = liaisons.filter(l => l && !l.admin_email);
+          // Filter to show only admin connections (where admin_email exists)
+          const organiserLiaisons = liaisons.filter(l => l && l.admin_email);
 
           return (
             <>
@@ -267,12 +291,12 @@ const SupplierTeam = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {manualConnections.map((conn, idx) => (
-                      <tr key={idx + '-' + conn.email}>
-                        <td>{conn.name}</td>
-                        <td>{conn.email}</td>
+                    {manualConnections.map((liaison, idx) => (
+                      <tr key={idx + '-' + liaison.email}>
+                        <td>{liaison.name}</td>
+                        <td>{liaison.email}</td>
                         <td>
-                          <button className="remove-btn" onClick={() => removeLiaison(conn.name, conn.email)}>
+                          <button className="remove-btn" onClick={() => removeLiaison(liaison.name, liaison.email)}>
                             Remove
                           </button>
                         </td>
@@ -283,8 +307,8 @@ const SupplierTeam = () => {
               )}
 
               <h2 style={{ marginTop: '2rem' }}>Connections</h2>
-              {organiserLiaisons.length === 0 ? (
-                <p>No liaisons added yet.</p>
+              {connections.length === 0 ? (
+                <p>No connections yet.</p>
               ) : (
                 <table className="liaison-table">
                   <thead>
@@ -294,10 +318,10 @@ const SupplierTeam = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {organiserLiaisons.map((liaison, idx) => (
-                      <tr key={idx + '-' + liaison.email}>
-                        <td>{liaison.name}</td>
-                        <td>{liaison.email}</td>
+                    {connections.map((connection, idx) => (
+                      <tr key={idx + '-' + connection.requester_email}>
+                        <td>{connection.requester_name}</td>
+                        <td>{connection.requester_email}</td>
                       </tr>
                     ))}
                   </tbody>
