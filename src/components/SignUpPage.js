@@ -482,6 +482,7 @@ const SignUpPage = () => {
                 <option value="Content Creation Services">Content Creation Services</option>
                 <option value="Corporate Catering Services">Corporate Catering Services</option>
                 <option value="Dancers/Choreographers">Dancers/Choreographers</option>
+                <option value="Decorators">Decorators</option>
                 <option value="Dessert Caterers">Dessert Caterers</option>
                 <option value="Digital Marketing Agencies">Digital Marketing Agencies</option>
                 <option value="DJs">DJs</option>
