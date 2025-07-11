@@ -28,18 +28,17 @@ const SuppliersProfile = () => {
   const location = useLocation();
   const { supplierId } = useParams();
   const [activeNav, setActiveNav] = useState('Suppliers');
-  const [userData, setUserData] = useState({ username: 'Alex' }); // Example user data
+  const [userData, setUserData] = useState(null);
   const [supplierData, setSupplierData] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState('unknown'); // 'unknown', 'connected', 'pending', 'not_connected'
+  const [connectionStatus, setConnectionStatus] = useState('unknown');
 
   // Get current user
   useEffect(() => {
     const getCurrentUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        // Get user profile data
         const { data: profile } = await supabase
           .from('profiles')
           .select('*')
@@ -57,12 +56,33 @@ const SuppliersProfile = () => {
     getCurrentUser();
   }, []);
 
-  // Get supplier data from navigation state, URL params, or use defaults
+  // Get supplier data and subscribe to changes
   useEffect(() => {
+    let profileSubscription;
+
     const fetchSupplierData = async () => {
       if (location.state && location.state.supplier) {
         setSupplierData(location.state.supplier);
-        console.log('Supplier data received:', location.state.supplier);
+        // Also fetch fresh data from database to ensure we have latest
+        const { data: supplier } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', location.state.supplier.id)
+          .single();
+          
+        if (supplier) {
+          setSupplierData({
+            id: supplier.id,
+            name: supplier.company_name || supplier.full_name,
+            location: supplier.address,
+            description: supplier.description,
+            service_type: supplier.service_type,
+            promotions: supplier.promotions || { title: '', description: '' },
+            rating: supplier.rating || 4.5,
+            email: supplier.email,
+            phone: supplier.phone || 'Not provided'
+          });
+        }
       } else if (supplierId) {
         // Fetch supplier data from database using supplierId
         const { data: supplier, error } = await supabase
@@ -75,7 +95,10 @@ const SuppliersProfile = () => {
           setSupplierData({
             id: supplier.id,
             name: supplier.company_name || supplier.full_name,
-            location: supplier.address || 'Location not provided',
+            location: supplier.address,
+            description: supplier.description,
+            service_type: supplier.service_type,
+            promotions: supplier.promotions || { title: '', description: '' },
             rating: supplier.rating || 4.5,
             email: supplier.email,
             phone: supplier.phone || 'Not provided'
@@ -83,20 +106,52 @@ const SuppliersProfile = () => {
         } else {
           console.error('Error fetching supplier:', error);
         }
-      } else {
-        // Default supplier data if none provided
-        setSupplierData({
-          name: 'Pizza Corner',
-          location: 'Location',
-          rating: 4.5,
-          email: 'info@pizzacorner.com',
-          phone: 'Not provided'
-        });
-        console.log('Using default supplier data');
+      }
+    };
+    
+    // Set up real-time subscription
+    const setupSubscription = () => {
+      const targetId = supplierId || (location.state && location.state.supplier && location.state.supplier.id);
+      if (targetId) {
+        profileSubscription = supabase
+          .channel('profile_changes')
+          .on(
+            'postgres_changes',
+            {
+              event: '*',
+              schema: 'public',
+              table: 'profiles',
+              filter: `id=eq.${targetId}`
+            },
+            (payload) => {
+              console.log('Profile updated:', payload);
+              const updatedProfile = payload.new;
+              setSupplierData({
+                id: updatedProfile.id,
+                name: updatedProfile.company_name || updatedProfile.full_name,
+                location: updatedProfile.address,
+                description: updatedProfile.description,
+                service_type: updatedProfile.service_type,
+                promotions: updatedProfile.promotions || { title: '', description: '' },
+                rating: updatedProfile.rating || 4.5,
+                email: updatedProfile.email,
+                phone: updatedProfile.phone || 'Not provided'
+              });
+            }
+          )
+          .subscribe();
       }
     };
     
     fetchSupplierData();
+    setupSubscription();
+
+    // Cleanup subscription on unmount
+    return () => {
+      if (profileSubscription) {
+        supabase.removeChannel(profileSubscription);
+      }
+    };
   }, [location, supplierId]);
 
   // Check connection status
@@ -146,12 +201,6 @@ const SuppliersProfile = () => {
     setIsConnecting(false);
   };
 
-  // On mount, retrieve user data from localStorage (if any)
-  useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem('user')) || { username: 'Alex' }; // Fallback to 'Alex'
-    setUserData(storedUser);
-  }, [location]);
-
   // Navigation data
   const mainNavItems = [
     { name: 'Home', path: '/SuppliersPage' },
@@ -166,12 +215,16 @@ const SuppliersProfile = () => {
 
   const handleNavButtonClick = (path, navName) => {
     setActiveNav(navName);
-    navigate(path);  // Handle navigation on button click
+    navigate(path);
   };
+
+  if (!supplierData) {
+    return <div style={styles.loading}>Loading...</div>;
+  }
 
   return (
     <div style={styles.container}>
-      {/* Updated Navigation Bar */}
+      {/* Navigation Bar */}
       <nav style={styles.navBar} className="suppliers-profile-navbar">
         <div style={styles.navSection} className="suppliers-profile-navsection">
           <img 
@@ -212,7 +265,7 @@ const SuppliersProfile = () => {
           <div style={styles.heroContent} className="suppliers-profile-herocontent">
             <div style={styles.heroHeader}>
               <h1 style={styles.heroTitle} className="suppliers-profile-herotitle">
-                {supplierData ? supplierData.name : 'Loading...'}
+                {supplierData.name || 'Supplier Name'}
               </h1>
               <div style={styles.buttonGroup} className="suppliers-profile-buttongroup">
                 <button 
@@ -233,7 +286,7 @@ const SuppliersProfile = () => {
             </div>
             <div style={styles.locationContainer}>
               <span style={styles.locationText}>
-                {supplierData ? supplierData.location : 'Location'}
+                {supplierData.location || 'Location not set'}
               </span>
             </div>
           </div>
@@ -244,7 +297,7 @@ const SuppliersProfile = () => {
       <div style={styles.content} className="suppliers-profile-content">
         <div style={styles.descriptionBox} className="suppliers-profile-descriptionbox">
           <p style={styles.description}>
-            simply dummy text of the printing and typesetting industry...
+            {supplierData.description || 'No description available'}
           </p>
         </div>
 
@@ -252,15 +305,19 @@ const SuppliersProfile = () => {
         <div style={styles.gridContainer} className="suppliers-profile-gridcontainer">
           <div style={styles.column}>
             <h3 style={styles.sectionTitle} className="suppliers-profile-sectiontitle">Services</h3>
-            <div style={styles.serviceItem}>Menu Planning</div>
+            <div style={styles.serviceItem}>{supplierData.service_type || 'Service type not set'}</div>
           </div>
 
           {/* Promo Section */}
           <div style={styles.column}>
             <h3 style={styles.sectionTitle} className="suppliers-profile-sectiontitle">Promo</h3>
             <div style={styles.promoCard} className="suppliers-profile-promocard">
-              <div style={styles.promoTitle}>10% off on menu planning</div>
-              <div style={styles.promoText}>Menu Planning with golden package.</div>
+              <div style={styles.promoTitle}>
+                {supplierData.promotions?.title || 'No active promotions'}
+              </div>
+              <div style={styles.promoText}>
+                {supplierData.promotions?.description || 'No promotion details available'}
+              </div>
             </div>
           </div>
 
@@ -268,9 +325,9 @@ const SuppliersProfile = () => {
           <div style={styles.column}>
             <h3 style={styles.sectionTitle} className="suppliers-profile-sectiontitle">Ratings</h3>
             <div style={styles.ratingItem}>
-              <div>Menu Planning</div>
-              <StarRating rating={supplierData ? supplierData.rating : 4.5} />
-              <div style={styles.ratingText}>(4.5/5)</div>
+              <div>{supplierData.service_type || 'Overall Rating'}</div>
+              <StarRating rating={supplierData.rating || 4.5} />
+              <div style={styles.ratingText}>({supplierData.rating || 4.5}/5)</div>
             </div>
           </div>
         </div>
@@ -556,6 +613,15 @@ const styles = {
     fontSize: '0.8rem',
     color: '#A888B5',
     marginTop: '0.3rem',
+  },
+  loading: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100vh',
+    fontSize: '1.2rem',
+    color: '#441752',
+    backgroundColor: '#A888B5',
   },
 };
 

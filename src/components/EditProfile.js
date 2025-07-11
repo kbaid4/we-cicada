@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaStar } from 'react-icons/fa';
 import UserProfile from './UserProfile';
+import { supabase } from '../supabaseClient';
 
 const StarRating = ({ rating }) => {
   return (
@@ -24,14 +25,76 @@ const StarRating = ({ rating }) => {
 const EditProfile = () => {
   const navigate = useNavigate();
   const [activeNav, setActiveNav] = useState('Suppliers');
-  const [userData, setUserData] = useState({ username: 'Alex' }); // Example user data
+  const [userData, setUserData] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedData, setEditedData] = useState({
+    description: '',
+    service_type: '',
+    promotions: { title: '', description: '' }
+  });
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null);
 
-    // On mount, retrieve user data from localStorage (if any)
-    useEffect(() => {
-      const storedUser = JSON.parse(localStorage.getItem('user')) || { username: 'La Place' }; // Fallback to 'Alex'
-      setUserData(storedUser);
-    }, []);
-  
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+
+          if (error) throw error;
+          if (profile) {
+            setUserData(profile);
+            setEditedData({
+              description: profile.description || '',
+              service_type: profile.service_type || '',
+              promotions: profile.promotions || { title: '', description: '' }
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user profile:', error.message);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    setSaveError(null);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No user found');
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          description: editedData.description,
+          service_type: editedData.service_type,
+          promotions: editedData.promotions,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      setUserData({
+        ...userData,
+        ...editedData
+      });
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Error saving profile:', error.message);
+      setSaveError('Failed to save changes. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   // Navigation data
   const mainNavItems = [
@@ -47,7 +110,7 @@ const EditProfile = () => {
 
   const handleNavButtonClick = (path, navName) => {
     setActiveNav(navName);
-    navigate(path);  // Handle navigation on button click
+    navigate(path);
   };
 
   return (
@@ -60,7 +123,6 @@ const EditProfile = () => {
             alt="CITADA Logo" 
             style={styles.navLogo}
             className="edit-profile-logo"
-          
           />
           {mainNavItems.map(item => (
             <button
@@ -94,41 +156,128 @@ const EditProfile = () => {
         <div style={styles.backgroundOverlay} className="edit-profile-hero-bg">
           <div style={styles.heroContent} className="edit-profile-hero-content">
             <div style={styles.heroHeader} className="edit-profile-hero-header">
-              <h1 style={styles.heroTitle}>{userData.username || 'Your Profile'}</h1>
-              <div style={styles.buttonGroup}>
-                <button style={styles.connectButton}>Connect</button>
-                <button style={styles.dealButton}>DEAL</button>
-                <button style={styles.connectButton}>Feedback</button>
+              <h1 style={styles.heroTitle}>
+                {userData?.full_name || userData?.company_name || 'Loading...'}
+              </h1>
+              <div style={styles.editButtons}>
+                {!isEditing ? (
+                  <button 
+                    style={styles.editButton}
+                    onClick={() => setIsEditing(true)}
+                  >
+                    Edit Profile
+                  </button>
+                ) : (
+                  <div style={styles.saveButtonGroup}>
+                    <button 
+                      style={styles.saveButton}
+                      onClick={handleSave}
+                      disabled={isSaving}
+                    >
+                      {isSaving ? 'Saving...' : 'Save Changes'}
+                    </button>
+                    <button 
+                      style={styles.cancelButton}
+                      onClick={() => {
+                        setIsEditing(false);
+                        setEditedData({
+                          description: userData?.description || '',
+                          service_type: userData?.service_type || '',
+                          promotions: userData?.promotions || { title: '', description: '' }
+                        });
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
             <div style={styles.locationContainer}>
-              <span style={styles.locationText}>Location</span>
+              <span style={styles.locationText}>{userData?.address || 'Location not set'}</span>
             </div>
           </div>
         </div>
       </div>
 
+      {saveError && (
+        <div style={styles.errorMessage}>
+          {saveError}
+        </div>
+      )}
+
       {/* Main Content */}
       <div style={styles.content} className="edit-profile-content">
         <div style={styles.descriptionBox} className="edit-profile-descbox">
-          <p style={styles.description}>
-            simply dummy text of the printing and typesetting industry...
-          </p>
+          {isEditing ? (
+            <textarea
+              style={styles.editInput}
+              value={editedData.description}
+              onChange={(e) => setEditedData({
+                ...editedData,
+                description: e.target.value
+              })}
+              placeholder="Add a description of your services..."
+              rows={4}
+            />
+          ) : (
+            <p style={styles.description}>
+              {userData?.description || 'Add a description of your services...'}
+            </p>
+          )}
         </div>
 
         {/* Services Section */}
         <div style={styles.gridContainer} className="edit-profile-grid">
           <div style={styles.column} className="edit-profile-col">
             <h3 style={styles.sectionTitle}>Services</h3>
-            <div style={styles.serviceItem}>Menu Planning</div>
+            <div style={styles.serviceItem}>
+              {userData?.service_type || 'Service type not set'}
+            </div>
           </div>
 
           {/* Promo Section */}
           <div style={styles.column} className="edit-profile-col">
             <h3 style={styles.sectionTitle}>Promo</h3>
             <div style={styles.promoCard}>
-              <div style={styles.promoTitle}>10% off on menu planning</div>
-              <div style={styles.promoText}>Menu Planning with golden package.</div>
+              {isEditing ? (
+                <>
+                  <input
+                    style={styles.editInput}
+                    value={editedData.promotions.title}
+                    onChange={(e) => setEditedData({
+                      ...editedData,
+                      promotions: {
+                        ...editedData.promotions,
+                        title: e.target.value
+                      }
+                    })}
+                    placeholder="Promotion title"
+                  />
+                  <textarea
+                    style={{...styles.editInput, marginTop: '8px'}}
+                    value={editedData.promotions.description}
+                    onChange={(e) => setEditedData({
+                      ...editedData,
+                      promotions: {
+                        ...editedData.promotions,
+                        description: e.target.value
+                      }
+                    })}
+                    placeholder="Promotion description"
+                    rows={2}
+                  />
+                </>
+              ) : (
+                <>
+                  <div style={styles.promoTitle}>
+                    {userData?.promotions?.title || 'Current Promotions'}
+                  </div>
+                  <div style={styles.promoText}>
+                    {userData?.promotions?.description || 'No active promotions'}
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -136,7 +285,7 @@ const EditProfile = () => {
           <div style={styles.column} className="edit-profile-col">
             <h3 style={styles.sectionTitle}>Ratings</h3>
             <div style={styles.ratingItem}>
-              <div>Menu Planning</div>
+              <div>{userData?.service_type || 'Overall Rating'}</div>
               <StarRating rating={4.5} />
               <div style={styles.ratingText}>(4.5/5)</div>
             </div>
@@ -433,6 +582,63 @@ const styles = {
     fontSize: '0.8rem',
     color: '#A888B5',
     marginTop: '0.3rem',
+  },
+  editButton: {
+    backgroundColor: '#A888B5',
+    color: '#441752',
+    border: 'none',
+    padding: '8px 16px',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontWeight: '500',
+    transition: 'background-color 0.2s',
+  },
+  saveButton: {
+    backgroundColor: '#441752',
+    color: '#A888B5',
+    border: 'none',
+    padding: '8px 16px',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontWeight: '500',
+    marginRight: '8px',
+  },
+  cancelButton: {
+    backgroundColor: 'transparent',
+    color: '#A888B5',
+    border: '1px solid #A888B5',
+    padding: '8px 16px',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontWeight: '500',
+  },
+  editInput: {
+    backgroundColor: '#441752',
+    color: '#A888B5',
+    border: '1px solid #A888B5',
+    borderRadius: '4px',
+    padding: '8px',
+    width: '100%',
+    fontSize: '14px',
+    fontFamily: 'inherit',
+    resize: 'vertical',
+  },
+  saveButtonGroup: {
+    display: 'flex',
+    gap: '8px',
+  },
+  errorMessage: {
+    backgroundColor: '#ff6b6b',
+    color: 'white',
+    padding: '8px 16px',
+    borderRadius: '4px',
+    margin: '0 2rem',
+    textAlign: 'center',
+  },
+  editButtons: {
+    display: 'flex',
+    gap: '8px',
+    marginLeft: 'auto',
   },
 };
 
