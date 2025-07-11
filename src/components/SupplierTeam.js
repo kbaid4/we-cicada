@@ -256,8 +256,8 @@ const SupplierTeam = () => {
           return (
             <>
               {organiserLiaisons.length === 0 ? (
-                <p>No liaisons added yet.</p>
-              ) : (
+          <p>No liaisons added yet.</p>
+        ) : (
                 <table className="liaison-table">
                   <thead>
                     <tr>
@@ -272,9 +272,9 @@ const SupplierTeam = () => {
                         <td>{liaison.name}</td>
                         <td>{liaison.email}</td>
                         <td>
-                          <button className="remove-btn" onClick={() => removeLiaison(liaison.name, liaison.email)}>
-                            Remove
-                          </button>
+                  <button className="remove-btn" onClick={() => removeLiaison(liaison.name, liaison.email)}>
+                    Remove
+                  </button>
                         </td>
                       </tr>
                     ))}
@@ -302,7 +302,7 @@ const SupplierTeam = () => {
                     ))}
                   </tbody>
                 </table>
-              )}
+        )}
             </>
           );
         })()}

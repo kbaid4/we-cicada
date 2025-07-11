@@ -110,6 +110,7 @@ import BeverageSuppliersPage from './components/BeverageSuppliersPage';
 import BartendingServicesPage from './components/BartendingServicesPage';
 import DessertCaterersPage from './components/DessertCaterersPage';
 import CorporateCateringPage from './components/CorporateCateringPage';
+import CleaningServicePage from './components/CleaningServicePage';
 
 // Privacy Components
 import CookieConsent from './components/CookieConsent';
@@ -233,6 +234,9 @@ function App() {
         <Route path="/chauffeur-services" element={<ChauffeurServicesPage />} />
         <Route path="/airport-transfer-services" element={<AirportTransferServicesPage />} />
         <Route path="/bike-rental-services" element={<BikeRentalServicesPage />} />
+        
+        {/* Cleaning Services Route */}
+        <Route path="/cleaning-services" element={<CleaningServicePage />} />
         
         {/* Other Routes */}
         <Route path="/permits" element={<PermitsPage />} />

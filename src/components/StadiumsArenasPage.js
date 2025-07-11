@@ -1,14 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import UserProfile from './UserProfile';
 import styles from './HotelsListPage.module.css';
+import { supabase } from '../supabaseClient';
 
-const stadiumsArenasData = [
-  { name: 'National Stadium', location: 'Downtown', rating: 4.8, image: '/images/venues/5.png' },
-  { name: 'Arena Maximus', location: 'City Center', rating: 4.6, image: '/images/venues/5.png' },
-  { name: 'Olympic Arena', location: 'Uptown', rating: 4.7, image: '/images/venues/5.png' },
-  { name: 'Sports Complex', location: 'Suburbs', rating: 4.5, image: '/images/venues/5.png' }
-];
+// Default image for stadium/arena suppliers
+const DEFAULT_STADIUM_IMAGE = '/images/venues/5.png';
 
 const mainNavItems = [
   { name: 'Home', path: '/SuppliersPage' },
@@ -19,17 +16,62 @@ const rightNavItems = [
   { name: 'My Work', path: '/my-work' },
   { name: 'My Team', path: '/my-team' },
 ];
-// User info will be handled by UserProfile component
 
 const StadiumsArenasPage = () => {
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState('name');
+  const [venues, setVenues] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  let filtered = stadiumsArenasData.filter(venue =>
+  // Fetch stadium/arena suppliers from Supabase
+  useEffect(() => {
+    fetchVenues();
+  }, []);
+
+  const fetchVenues = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('service_type', 'Stadiums/Arenas')
+        .eq('user_type', 'supplier');
+
+      if (error) {
+        console.error('Error fetching stadiums/arenas:', error);
+        setError('Failed to load stadiums/arenas');
+        return;
+      }
+
+      // Transform data to match expected format
+      const transformedData = data.map(supplier => ({
+        id: supplier.id,
+        name: supplier.company_name || supplier.full_name || 'Stadium/Arena',
+        location: supplier.address || 'Location not specified',
+        rating: 4.0 + (Math.random() * 1), // Random rating between 4.0-5.0 for now
+        image: DEFAULT_STADIUM_IMAGE,
+        email: supplier.email,
+        phone: supplier.phone || 'Not provided'
+      }));
+
+      setVenues(transformedData);
+      console.log('Fetched stadiums/arenas:', transformedData);
+    } catch (err) {
+      console.error('Error in fetchVenues:', err);
+      setError('Failed to load stadiums/arenas');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Filtering and sorting logic
+  let filtered = venues.filter(venue =>
     venue.name.toLowerCase().includes(search.toLowerCase()) ||
     venue.location.toLowerCase().includes(search.toLowerCase())
   );
+  
   if (sort === 'name') {
     filtered = filtered.sort((a, b) => a.name.localeCompare(b.name));
   } else if (sort === 'rating') {
@@ -40,37 +82,89 @@ const StadiumsArenasPage = () => {
     <div className={styles['app-container']}>
       <nav className={styles['top-nav']}>
         <div className={styles['nav-section']}>
-          <img src={process.env.PUBLIC_URL + '/images/landingpage/logo.png'} alt="CITADA Logo" className={styles['nav-logo']} onClick={() => navigate('/')} style={{ cursor: 'pointer' }} />
+          <img
+            src={process.env.PUBLIC_URL + '/images/landingpage/logo.png'}
+            alt="CITADA Logo"
+            className={styles['nav-logo']}
+            onClick={() => navigate('/')}
+            style={{ cursor: 'pointer' }}
+          />
           {mainNavItems.map(item => (
-            <button key={item.name} className={styles['nav-btn']} onClick={() => navigate(item.path)}>{item.name}</button>
+            <button
+              key={item.name}
+              className={styles['nav-btn']}
+              onClick={() => navigate(item.path)}
+            >
+              {item.name}
+            </button>
           ))}
         </div>
         <div className={styles['nav-section']}>
           {rightNavItems.map(item => (
-            <button key={item.name} className={styles['nav-btn']} onClick={() => navigate(item.path)}>{item.name}</button>
+            <button
+              key={item.name}
+              className={styles['nav-btn']}
+              onClick={() => navigate(item.path)}
+            >
+              {item.name}
+            </button>
           ))}
           <UserProfile showName={false} />
         </div>
       </nav>
+
+      {/* Welcome Section */}
+      <div className={styles['welcome-section']}>
+        <h1 className={styles['welcome-text']}>Stadiums & Arenas</h1>
+      </div>
+
+      {/* Toolbar: Search, Filter, Sort */}
       <div className={styles['hotels-toolbar']}>
-        <input className={styles['search-input']} type="text" placeholder="Search stadiums/arenas..." value={search} onChange={e => setSearch(e.target.value)} />
+        <input
+          className={styles['search-input']}
+          type="text"
+          placeholder="Search stadiums & arenas..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
         <div className={styles['filter-sort-group']}>
-          <select className={styles['sort-select']} value={sort} onChange={e => setSort(e.target.value)}>
+          <select
+            className={styles['sort-select']}
+            value={sort}
+            onChange={e => setSort(e.target.value)}
+          >
             <option value="name">Sort by Name</option>
             <option value="rating">Sort by Rating</option>
           </select>
         </div>
       </div>
+
+      {/* Venues Grid */}
       <div className={styles['hotels-grid']}>
-        {filtered.length === 0 ? (
-          <div style={{ color: '#441752', fontWeight: 500, fontSize: 18, marginTop: 40 }}>No stadiums/arenas found.</div>
+        {loading ? (
+          <div style={{ color: '#441752', fontWeight: 500, fontSize: 18, marginTop: 40 }}>Loading stadiums & arenas...</div>
+        ) : error ? (
+          <div style={{ color: '#d32f2f', fontWeight: 500, fontSize: 18, marginTop: 40 }}>{error}</div>
+        ) : filtered.length === 0 ? (
+          <div style={{ color: '#441752', fontWeight: 500, fontSize: 18, marginTop: 40 }}>
+            {venues.length === 0 ? 'No stadiums & arenas registered yet.' : 'No stadiums & arenas found matching your search.'}
+          </div>
         ) : (
           filtered.map((venue, idx) => (
-            <div key={idx} className={styles['hotel-card']} style={{ cursor: 'pointer' }} onClick={() => navigate('/SuppliersProfile')}>
-              <img src={process.env.PUBLIC_URL + venue.image} alt={venue.name} className={styles['hotel-image']} />
+            <div
+              key={venue.id || idx}
+              className={styles['hotel-card']}
+              style={{ cursor: 'pointer' }}
+              onClick={() => navigate('/SuppliersProfile', { state: { supplier: venue } })}
+            >
+              <img
+                src={process.env.PUBLIC_URL + venue.image}
+                alt={venue.name}
+                className={styles['hotel-image']}
+              />
               <h2 className={styles['hotel-name']}>{venue.name}</h2>
               <div className={styles['hotel-location']}>{venue.location}</div>
-              <div className={styles['hotel-rating']}>Rating: {venue.rating} ⭐</div>
+              <div className={styles['hotel-rating']}>Rating: {venue.rating.toFixed(1)} ⭐</div>
             </div>
           ))
         )}

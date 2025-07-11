@@ -190,10 +190,10 @@ const MyTeam = () => {
 
           return (
             <>
-              <h2>Planners</h2>
+        <h2>Planners</h2>
               {manualPlanners.length === 0 ? (
-                <p>No planners added yet.</p>
-              ) : (
+          <p>No planners added yet.</p>
+        ) : (
                 <table className="liaison-table">
                   <thead>
                     <tr>
@@ -209,8 +209,8 @@ const MyTeam = () => {
                         <td>{planner.email}</td>
                         <td>
                           <button className="remove-btn" onClick={() => removePlanner(planner.name, planner.email)}>
-                            Remove
-                          </button>
+                    Remove
+                  </button>
                         </td>
                       </tr>
                     ))}
@@ -238,7 +238,7 @@ const MyTeam = () => {
                     ))}
                   </tbody>
                 </table>
-              )}
+        )}
             </>
           );
         })()}

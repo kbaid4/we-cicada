@@ -1,54 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import UserProfile from './UserProfile';
 import styles from './HotelsListPage.module.css';
+import { supabase } from '../supabaseClient';
 
-// Dummy data for Food Trucks
-const foodTrucksData = [
-  { 
-    name: 'Taco Fiesta Truck', 
-    location: 'Downtown Food Park', 
-    rating: 4.6, 
-    image: '/images/venues/6.png',
-  },
-  { 
-    name: 'Burger Beast', 
-    location: 'City Center', 
-    rating: 4.5, 
-    image: '/images/venues/6.png',
-  },
-  { 
-    name: 'Curry on Wheels', 
-    location: 'Riverside Market', 
-    rating: 4.7, 
-    image: '/images/venues/6.png',
-  },
-  { 
-    name: 'Pizza Mobile', 
-    location: 'Central Square', 
-    rating: 4.4, 
-    image: '/images/venues/6.png',
-  },
-  { 
-    name: 'Sushi Rollin', 
-    location: 'Business District', 
-    rating: 4.8, 
-    image: '/images/venues/6.png',
-  },
-  { 
-    name: 'BBQ Pit Stop', 
-    location: 'Park Avenue', 
-    rating: 4.6, 
-    image: '/images/venues/6.png',
-  },
-];
+// Default image for food truck suppliers
+const DEFAULT_FOOD_TRUCK_IMAGE = '/images/venues/11.png';
 
 const mainNavItems = [
   { name: 'Home', path: '/SuppliersPage' },
   { name: 'Events', path: '/Events' },
   { name: 'Messages', path: '/MessagesPage' },
 ];
-
 const rightNavItems = [
   { name: 'My Work', path: '/my-work' },
   { name: 'My Team', path: '/my-team' },
@@ -57,40 +20,92 @@ const rightNavItems = [
 const FoodTrucksPage = () => {
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState('name');
+  const [foodTrucks, setFoodTrucks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
+  // Fetch food truck suppliers from Supabase
+  useEffect(() => {
+    fetchFoodTrucks();
+  }, []);
+
+  const fetchFoodTrucks = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('service_type', 'Food Trucks')
+        .eq('user_type', 'supplier');
+
+      if (error) {
+        console.error('Error fetching food trucks:', error);
+        setError('Failed to load food trucks');
+        return;
+      }
+
+      // Transform data to match expected format
+      const transformedData = data.map(supplier => ({
+        id: supplier.id,
+        name: supplier.company_name || supplier.full_name || 'Food Truck',
+        location: supplier.address || 'Location not specified',
+        rating: 4.0 + (Math.random() * 1), // Random rating between 4.0-5.0 for now
+        image: DEFAULT_FOOD_TRUCK_IMAGE,
+        email: supplier.email,
+        phone: supplier.phone || 'Not provided'
+      }));
+
+      setFoodTrucks(transformedData);
+      console.log('Fetched food trucks:', transformedData);
+    } catch (err) {
+      console.error('Error in fetchFoodTrucks:', err);
+      setError('Failed to load food trucks');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Filtering and sorting logic
-  let filteredTrucks = foodTrucksData.filter(truck =>
+  let filtered = foodTrucks.filter(truck =>
     truck.name.toLowerCase().includes(search.toLowerCase()) ||
     truck.location.toLowerCase().includes(search.toLowerCase())
   );
   
   if (sort === 'name') {
-    filteredTrucks = filteredTrucks.sort((a, b) => a.name.localeCompare(b.name));
+    filtered = filtered.sort((a, b) => a.name.localeCompare(b.name));
   } else if (sort === 'rating') {
-    filteredTrucks = filteredTrucks.sort((a, b) => b.rating - a.rating);
+    filtered = filtered.sort((a, b) => b.rating - a.rating);
   }
 
   return (
     <div className={styles['app-container']}>
       <nav className={styles['top-nav']}>
         <div className={styles['nav-section']}>
-          <img 
-            src={process.env.PUBLIC_URL + '/images/landingpage/logo.png'} 
-            alt="CITADA Logo" 
-            className={styles['nav-logo']} 
-            onClick={() => navigate('/')} 
-            style={{ cursor: 'pointer' }} 
+          <img
+            src={process.env.PUBLIC_URL + '/images/landingpage/logo.png'}
+            alt="CITADA Logo"
+            className={styles['nav-logo']}
+            onClick={() => navigate('/')}
+            style={{ cursor: 'pointer' }}
           />
           {mainNavItems.map(item => (
-            <button key={item.name} className={styles['nav-btn']} onClick={() => navigate(item.path)}>
+            <button
+              key={item.name}
+              className={styles['nav-btn']}
+              onClick={() => navigate(item.path)}
+            >
               {item.name}
             </button>
           ))}
         </div>
         <div className={styles['nav-section']}>
           {rightNavItems.map(item => (
-            <button key={item.name} className={styles['nav-btn']} onClick={() => navigate(item.path)}>
+            <button
+              key={item.name}
+              className={styles['nav-btn']}
+              onClick={() => navigate(item.path)}
+            >
               {item.name}
             </button>
           ))}
@@ -98,18 +113,24 @@ const FoodTrucksPage = () => {
         </div>
       </nav>
 
+      {/* Welcome Section */}
+      <div className={styles['welcome-section']}>
+        <h1 className={styles['welcome-text']}>Food Trucks</h1>
+      </div>
+
+      {/* Toolbar: Search, Filter, Sort */}
       <div className={styles['hotels-toolbar']}>
         <input
           className={styles['search-input']}
           type="text"
-          placeholder="Search food trucks by name, location..."
+          placeholder="Search food trucks..."
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
         <div className={styles['filter-sort-group']}>
-          <select 
-            className={styles['sort-select']} 
-            value={sort} 
+          <select
+            className={styles['sort-select']}
+            value={sort}
             onChange={e => setSort(e.target.value)}
           >
             <option value="name">Sort by Name</option>
@@ -118,27 +139,32 @@ const FoodTrucksPage = () => {
         </div>
       </div>
 
+      {/* Food Trucks Grid */}
       <div className={styles['hotels-grid']}>
-        {filteredTrucks.length === 0 ? (
+        {loading ? (
+          <div style={{ color: '#441752', fontWeight: 500, fontSize: 18, marginTop: 40 }}>Loading food trucks...</div>
+        ) : error ? (
+          <div style={{ color: '#d32f2f', fontWeight: 500, fontSize: 18, marginTop: 40 }}>{error}</div>
+        ) : filtered.length === 0 ? (
           <div style={{ color: '#441752', fontWeight: 500, fontSize: 18, marginTop: 40 }}>
-            No food trucks found.
+            {foodTrucks.length === 0 ? 'No food trucks registered yet.' : 'No food trucks found matching your search.'}
           </div>
         ) : (
-          filteredTrucks.map((truck, idx) => (
-            <div 
-              key={idx} 
-              className={styles['hotel-card']} 
+          filtered.map((truck, idx) => (
+            <div
+              key={truck.id || idx}
+              className={styles['hotel-card']}
               style={{ cursor: 'pointer' }}
-              onClick={() => navigate('/SuppliersProfile')}
+              onClick={() => navigate('/SuppliersProfile', { state: { supplier: truck } })}
             >
-              <img 
-                src={process.env.PUBLIC_URL + truck.image} 
-                alt={truck.name} 
-                className={styles['hotel-image']} 
+              <img
+                src={process.env.PUBLIC_URL + truck.image}
+                alt={truck.name}
+                className={styles['hotel-image']}
               />
               <h2 className={styles['hotel-name']}>{truck.name}</h2>
               <div className={styles['hotel-location']}>{truck.location}</div>
-              <div className={styles['hotel-rating']}>Rating: {truck.rating} ⭐</div>
+              <div className={styles['hotel-rating']}>Rating: {truck.rating.toFixed(1)} ⭐</div>
             </div>
           ))
         )}

@@ -1,54 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import UserProfile from './UserProfile';
 import styles from './HotelsListPage.module.css';
+import { supabase } from '../supabaseClient';
 
-// Dummy data for Specialty Cuisine Caterers
-const specialtyCuisineData = [
-  { 
-    name: 'Mediterranean Delights', 
-    location: 'Seaside District', 
-    rating: 4.7, 
-    image: '/images/venues/7.png',
-  },
-  { 
-    name: 'Asian Fusion Masters', 
-    location: 'Chinatown', 
-    rating: 4.8, 
-    image: '/images/venues/7.png',
-  },
-  { 
-    name: 'Taste of Italy', 
-    location: 'Little Italy', 
-    rating: 4.6, 
-    image: '/images/venues/7.png',
-  },
-  { 
-    name: 'Spice Route', 
-    location: 'Market District', 
-    rating: 4.9, 
-    image: '/images/venues/7.png',
-  },
-  { 
-    name: 'Sabor Latino', 
-    location: 'Cultural Quarter', 
-    rating: 4.5, 
-    image: '/images/venues/7.png',
-  },
-  { 
-    name: 'Tokyo Bites', 
-    location: 'Financial District', 
-    rating: 4.7, 
-    image: '/images/venues/7.png',
-  },
-];
+// Default image for specialty cuisine caterer suppliers
+const DEFAULT_CATERER_IMAGE = '/images/venues/10.png';
 
 const mainNavItems = [
   { name: 'Home', path: '/SuppliersPage' },
   { name: 'Events', path: '/Events' },
   { name: 'Messages', path: '/MessagesPage' },
 ];
-
 const rightNavItems = [
   { name: 'My Work', path: '/my-work' },
   { name: 'My Team', path: '/my-team' },
@@ -57,40 +20,92 @@ const rightNavItems = [
 const SpecialtyCuisineCaterersPage = () => {
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState('name');
+  const [caterers, setCaterers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
+  // Fetch specialty cuisine caterer suppliers from Supabase
+  useEffect(() => {
+    fetchCaterers();
+  }, []);
+
+  const fetchCaterers = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('service_type', 'Speciality Cuisine Caterers')
+        .eq('user_type', 'supplier');
+
+      if (error) {
+        console.error('Error fetching specialty cuisine caterers:', error);
+        setError('Failed to load specialty cuisine caterers');
+        return;
+      }
+
+      // Transform data to match expected format
+      const transformedData = data.map(supplier => ({
+        id: supplier.id,
+        name: supplier.company_name || supplier.full_name || 'Specialty Cuisine Caterer',
+        location: supplier.address || 'Location not specified',
+        rating: 4.0 + (Math.random() * 1), // Random rating between 4.0-5.0 for now
+        image: DEFAULT_CATERER_IMAGE,
+        email: supplier.email,
+        phone: supplier.phone || 'Not provided'
+      }));
+
+      setCaterers(transformedData);
+      console.log('Fetched specialty cuisine caterers:', transformedData);
+    } catch (err) {
+      console.error('Error in fetchCaterers:', err);
+      setError('Failed to load specialty cuisine caterers');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Filtering and sorting logic
-  let filteredCaterers = specialtyCuisineData.filter(caterer =>
+  let filtered = caterers.filter(caterer =>
     caterer.name.toLowerCase().includes(search.toLowerCase()) ||
     caterer.location.toLowerCase().includes(search.toLowerCase())
   );
   
   if (sort === 'name') {
-    filteredCaterers = filteredCaterers.sort((a, b) => a.name.localeCompare(b.name));
+    filtered = filtered.sort((a, b) => a.name.localeCompare(b.name));
   } else if (sort === 'rating') {
-    filteredCaterers = filteredCaterers.sort((a, b) => b.rating - a.rating);
+    filtered = filtered.sort((a, b) => b.rating - a.rating);
   }
 
   return (
     <div className={styles['app-container']}>
       <nav className={styles['top-nav']}>
         <div className={styles['nav-section']}>
-          <img 
-            src={process.env.PUBLIC_URL + '/images/landingpage/logo.png'} 
-            alt="CITADA Logo" 
-            className={styles['nav-logo']} 
-            onClick={() => navigate('/')} 
-            style={{ cursor: 'pointer' }} 
+          <img
+            src={process.env.PUBLIC_URL + '/images/landingpage/logo.png'}
+            alt="CITADA Logo"
+            className={styles['nav-logo']}
+            onClick={() => navigate('/')}
+            style={{ cursor: 'pointer' }}
           />
           {mainNavItems.map(item => (
-            <button key={item.name} className={styles['nav-btn']} onClick={() => navigate(item.path)}>
+            <button
+              key={item.name}
+              className={styles['nav-btn']}
+              onClick={() => navigate(item.path)}
+            >
               {item.name}
             </button>
           ))}
         </div>
         <div className={styles['nav-section']}>
           {rightNavItems.map(item => (
-            <button key={item.name} className={styles['nav-btn']} onClick={() => navigate(item.path)}>
+            <button
+              key={item.name}
+              className={styles['nav-btn']}
+              onClick={() => navigate(item.path)}
+            >
               {item.name}
             </button>
           ))}
@@ -98,18 +113,24 @@ const SpecialtyCuisineCaterersPage = () => {
         </div>
       </nav>
 
+      {/* Welcome Section */}
+      <div className={styles['welcome-section']}>
+        <h1 className={styles['welcome-text']}>Specialty Cuisine Caterers</h1>
+      </div>
+
+      {/* Toolbar: Search, Filter, Sort */}
       <div className={styles['hotels-toolbar']}>
         <input
           className={styles['search-input']}
           type="text"
-          placeholder="Search by name, location..."
+          placeholder="Search specialty cuisine caterers..."
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
         <div className={styles['filter-sort-group']}>
-          <select 
-            className={styles['sort-select']} 
-            value={sort} 
+          <select
+            className={styles['sort-select']}
+            value={sort}
             onChange={e => setSort(e.target.value)}
           >
             <option value="name">Sort by Name</option>
@@ -118,27 +139,32 @@ const SpecialtyCuisineCaterersPage = () => {
         </div>
       </div>
 
+      {/* Caterers Grid */}
       <div className={styles['hotels-grid']}>
-        {filteredCaterers.length === 0 ? (
+        {loading ? (
+          <div style={{ color: '#441752', fontWeight: 500, fontSize: 18, marginTop: 40 }}>Loading specialty cuisine caterers...</div>
+        ) : error ? (
+          <div style={{ color: '#d32f2f', fontWeight: 500, fontSize: 18, marginTop: 40 }}>{error}</div>
+        ) : filtered.length === 0 ? (
           <div style={{ color: '#441752', fontWeight: 500, fontSize: 18, marginTop: 40 }}>
-            No specialty cuisine caterers found.
+            {caterers.length === 0 ? 'No specialty cuisine caterers registered yet.' : 'No specialty cuisine caterers found matching your search.'}
           </div>
         ) : (
-          filteredCaterers.map((caterer, idx) => (
-            <div 
-              key={idx} 
-              className={styles['hotel-card']} 
+          filtered.map((caterer, idx) => (
+            <div
+              key={caterer.id || idx}
+              className={styles['hotel-card']}
               style={{ cursor: 'pointer' }}
-              onClick={() => navigate('/SuppliersProfile')}
+              onClick={() => navigate('/SuppliersProfile', { state: { supplier: caterer } })}
             >
-              <img 
-                src={process.env.PUBLIC_URL + caterer.image} 
-                alt={caterer.name} 
-                className={styles['hotel-image']} 
+              <img
+                src={process.env.PUBLIC_URL + caterer.image}
+                alt={caterer.name}
+                className={styles['hotel-image']}
               />
               <h2 className={styles['hotel-name']}>{caterer.name}</h2>
               <div className={styles['hotel-location']}>{caterer.location}</div>
-              <div className={styles['hotel-rating']}>Rating: {caterer.rating} ⭐</div>
+              <div className={styles['hotel-rating']}>Rating: {caterer.rating.toFixed(1)} ⭐</div>
             </div>
           ))
         )}

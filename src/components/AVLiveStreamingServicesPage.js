@@ -1,54 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import UserProfile from './UserProfile';
 import styles from './HotelsListPage.module.css';
+import { supabase } from '../supabaseClient';
 
-// Dummy data for Live Streaming Services
-const liveStreamingData = [
-  { 
-    name: 'Stream Masters', 
-    location: 'Downtown', 
-    rating: 4.8, 
-    image: '/images/venues/7.png',
-  },
-  { 
-    name: 'Live Event Pros', 
-    location: 'Media District', 
-    rating: 4.9, 
-    image: '/images/venues/7.png',
-  },
-  { 
-    name: 'Global Stream', 
-    location: 'Tech Hub', 
-    rating: 4.7, 
-    image: '/images/venues/7.png',
-  },
-  { 
-    name: 'Elite Broadcast', 
-    location: 'City Center', 
-    rating: 4.9, 
-    image: '/images/venues/7.png',
-  },
-  { 
-    name: 'Streaming Solutions', 
-    location: 'Uptown', 
-    rating: 4.6, 
-    image: '/images/venues/7.png',
-  },
-  { 
-    name: 'Live HD Network', 
-    location: 'Broadcast Center', 
-    rating: 4.8, 
-    image: '/images/venues/7.png',
-  },
-];
+// Default image for live streaming suppliers
+const DEFAULT_STREAMING_IMAGE = '/images/venues/14.png';
 
 const mainNavItems = [
   { name: 'Home', path: '/SuppliersPage' },
   { name: 'Events', path: '/Events' },
   { name: 'Messages', path: '/MessagesPage' },
 ];
-
 const rightNavItems = [
   { name: 'My Work', path: '/my-work' },
   { name: 'My Team', path: '/my-team' },
@@ -57,40 +20,92 @@ const rightNavItems = [
 const AVLiveStreamingServicesPage = () => {
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState('name');
+  const [suppliers, setSuppliers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
+  // Fetch live streaming suppliers from Supabase
+  useEffect(() => {
+    fetchSuppliers();
+  }, []);
+
+  const fetchSuppliers = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('service_type', 'Live Streaming Services')
+        .eq('user_type', 'supplier');
+
+      if (error) {
+        console.error('Error fetching live streaming suppliers:', error);
+        setError('Failed to load live streaming suppliers');
+        return;
+      }
+
+      // Transform data to match expected format
+      const transformedData = data.map(supplier => ({
+        id: supplier.id,
+        name: supplier.company_name || supplier.full_name || 'Live Streaming Provider',
+        location: supplier.address || 'Location not specified',
+        rating: 4.0 + (Math.random() * 1), // Random rating between 4.0-5.0 for now
+        image: DEFAULT_STREAMING_IMAGE,
+        email: supplier.email,
+        phone: supplier.phone || 'Not provided'
+      }));
+
+      setSuppliers(transformedData);
+      console.log('Fetched live streaming suppliers:', transformedData);
+    } catch (err) {
+      console.error('Error in fetchSuppliers:', err);
+      setError('Failed to load live streaming suppliers');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Filtering and sorting logic
-  let filteredServices = liveStreamingData.filter(service =>
-    service.name.toLowerCase().includes(search.toLowerCase()) ||
-    service.location.toLowerCase().includes(search.toLowerCase())
+  let filtered = suppliers.filter(supplier =>
+    supplier.name.toLowerCase().includes(search.toLowerCase()) ||
+    supplier.location.toLowerCase().includes(search.toLowerCase())
   );
   
   if (sort === 'name') {
-    filteredServices = filteredServices.sort((a, b) => a.name.localeCompare(b.name));
+    filtered = filtered.sort((a, b) => a.name.localeCompare(b.name));
   } else if (sort === 'rating') {
-    filteredServices = filteredServices.sort((a, b) => b.rating - a.rating);
+    filtered = filtered.sort((a, b) => b.rating - a.rating);
   }
 
   return (
     <div className={styles['app-container']}>
       <nav className={styles['top-nav']}>
         <div className={styles['nav-section']}>
-          <img 
-            src={process.env.PUBLIC_URL + '/images/landingpage/logo.png'} 
-            alt="CITADA Logo" 
-            className={styles['nav-logo']} 
-            onClick={() => navigate('/')} 
-            style={{ cursor: 'pointer' }} 
+          <img
+            src={process.env.PUBLIC_URL + '/images/landingpage/logo.png'}
+            alt="CITADA Logo"
+            className={styles['nav-logo']}
+            onClick={() => navigate('/')}
+            style={{ cursor: 'pointer' }}
           />
           {mainNavItems.map(item => (
-            <button key={item.name} className={styles['nav-btn']} onClick={() => navigate(item.path)}>
+            <button
+              key={item.name}
+              className={styles['nav-btn']}
+              onClick={() => navigate(item.path)}
+            >
               {item.name}
             </button>
           ))}
         </div>
         <div className={styles['nav-section']}>
           {rightNavItems.map(item => (
-            <button key={item.name} className={styles['nav-btn']} onClick={() => navigate(item.path)}>
+            <button
+              key={item.name}
+              className={styles['nav-btn']}
+              onClick={() => navigate(item.path)}
+            >
               {item.name}
             </button>
           ))}
@@ -98,18 +113,24 @@ const AVLiveStreamingServicesPage = () => {
         </div>
       </nav>
 
+      {/* Welcome Section */}
+      <div className={styles['welcome-section']}>
+        <h1 className={styles['welcome-text']}>Live Streaming Services</h1>
+      </div>
+
+      {/* Toolbar: Search, Filter, Sort */}
       <div className={styles['hotels-toolbar']}>
         <input
           className={styles['search-input']}
           type="text"
-          placeholder="Search live streaming services..."
+          placeholder="Search live streaming providers..."
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
         <div className={styles['filter-sort-group']}>
-          <select 
-            className={styles['sort-select']} 
-            value={sort} 
+          <select
+            className={styles['sort-select']}
+            value={sort}
             onChange={e => setSort(e.target.value)}
           >
             <option value="name">Sort by Name</option>
@@ -118,27 +139,32 @@ const AVLiveStreamingServicesPage = () => {
         </div>
       </div>
 
+      {/* Suppliers Grid */}
       <div className={styles['hotels-grid']}>
-        {filteredServices.length === 0 ? (
+        {loading ? (
+          <div style={{ color: '#441752', fontWeight: 500, fontSize: 18, marginTop: 40 }}>Loading live streaming providers...</div>
+        ) : error ? (
+          <div style={{ color: '#d32f2f', fontWeight: 500, fontSize: 18, marginTop: 40 }}>{error}</div>
+        ) : filtered.length === 0 ? (
           <div style={{ color: '#441752', fontWeight: 500, fontSize: 18, marginTop: 40 }}>
-            No live streaming services found.
+            {suppliers.length === 0 ? 'No live streaming providers registered yet.' : 'No live streaming providers found matching your search.'}
           </div>
         ) : (
-          filteredServices.map((service, idx) => (
-            <div 
-              key={idx} 
-              className={styles['hotel-card']} 
+          filtered.map((supplier, idx) => (
+            <div
+              key={supplier.id || idx}
+              className={styles['hotel-card']}
               style={{ cursor: 'pointer' }}
-              onClick={() => navigate('/SuppliersProfile')}
+              onClick={() => navigate('/SuppliersProfile', { state: { supplier: supplier } })}
             >
-              <img 
-                src={process.env.PUBLIC_URL + service.image} 
-                alt={service.name} 
-                className={styles['hotel-image']} 
+              <img
+                src={process.env.PUBLIC_URL + supplier.image}
+                alt={supplier.name}
+                className={styles['hotel-image']}
               />
-              <h2 className={styles['hotel-name']}>{service.name}</h2>
-              <div className={styles['hotel-location']}>{service.location}</div>
-              <div className={styles['hotel-rating']}>Rating: {service.rating} ⭐</div>
+              <h2 className={styles['hotel-name']}>{supplier.name}</h2>
+              <div className={styles['hotel-location']}>{supplier.location}</div>
+              <div className={styles['hotel-rating']}>Rating: {supplier.rating.toFixed(1)} ⭐</div>
             </div>
           ))
         )}

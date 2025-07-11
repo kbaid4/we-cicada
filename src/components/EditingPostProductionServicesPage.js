@@ -1,54 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import UserProfile from './UserProfile';
 import styles from './HotelsListPage.module.css';
+import { supabase } from '../supabaseClient';
 
-// Dummy data for Editing & Post-Production Services
-const servicesData = [
-  { 
-    name: 'Final Cut Studio', 
-    location: 'Downtown', 
-    rating: 4.8, 
-    image: '/images/venues/13.png'
-  },
-  { 
-    name: 'Premiere Pro Experts', 
-    location: 'Business District', 
-    rating: 4.9, 
-    image: '/images/venues/13.png'
-  },
-  { 
-    name: 'After Effects Masters', 
-    location: 'Uptown', 
-    rating: 4.7, 
-    image: '/images/venues/13.png'
-  },
-  { 
-    name: 'Color Grading Pros', 
-    location: 'West End', 
-    rating: 4.6, 
-    image: '/images/venues/13.png'
-  },
-  { 
-    name: 'Sound Design Studio', 
-    location: 'East District', 
-    rating: 4.8, 
-    image: '/images/venues/13.png'
-  },
-  { 
-    name: 'Visual Effects House', 
-    location: 'Theater District', 
-    rating: 4.7, 
-    image: '/images/venues/13.png'
-  },
-];
+// Default image for editing & post-production services
+const DEFAULT_POSTPRODUCTION_IMAGE = '/images/venues/6.png';
 
 const mainNavItems = [
   { name: 'Home', path: '/SuppliersPage' },
   { name: 'Events', path: '/Events' },
   { name: 'Messages', path: '/MessagesPage' },
 ];
-
 const rightNavItems = [
   { name: 'My Work', path: '/my-work' },
   { name: 'My Team', path: '/my-team' },
@@ -57,40 +20,92 @@ const rightNavItems = [
 const EditingPostProductionServicesPage = () => {
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState('name');
+  const [suppliers, setSuppliers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
+  // Fetch editing & post-production services from Supabase
+  useEffect(() => {
+    fetchSuppliers();
+  }, []);
+
+  const fetchSuppliers = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('service_type', 'Editing & Post-Production Services')
+        .eq('user_type', 'supplier');
+
+      if (error) {
+        console.error('Error fetching editing & post-production services:', error);
+        setError('Failed to load editing & post-production services');
+        return;
+      }
+
+      // Transform data to match expected format
+      const transformedData = data.map(supplier => ({
+        id: supplier.id,
+        name: supplier.company_name || supplier.full_name || 'Editing & Post-Production Service',
+        location: supplier.address || 'Location not specified',
+        rating: 4.0 + (Math.random() * 1), // Random rating between 4.0-5.0 for now
+        image: DEFAULT_POSTPRODUCTION_IMAGE,
+        email: supplier.email,
+        phone: supplier.phone || 'Not provided'
+      }));
+
+      setSuppliers(transformedData);
+      console.log('Fetched editing & post-production services:', transformedData);
+    } catch (err) {
+      console.error('Error in fetchSuppliers:', err);
+      setError('Failed to load editing & post-production services');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Filtering and sorting logic
-  let filteredServices = servicesData.filter(service =>
-    service.name.toLowerCase().includes(search.toLowerCase()) ||
-    service.location.toLowerCase().includes(search.toLowerCase())
+  let filtered = suppliers.filter(supplier =>
+    supplier.name.toLowerCase().includes(search.toLowerCase()) ||
+    supplier.location.toLowerCase().includes(search.toLowerCase())
   );
   
   if (sort === 'name') {
-    filteredServices = filteredServices.sort((a, b) => a.name.localeCompare(b.name));
+    filtered = filtered.sort((a, b) => a.name.localeCompare(b.name));
   } else if (sort === 'rating') {
-    filteredServices = filteredServices.sort((a, b) => b.rating - a.rating);
+    filtered = filtered.sort((a, b) => b.rating - a.rating);
   }
 
   return (
     <div className={styles['app-container']}>
       <nav className={styles['top-nav']}>
         <div className={styles['nav-section']}>
-          <img 
-            src={process.env.PUBLIC_URL + '/images/landingpage/logo.png'} 
-            alt="CITADA Logo" 
-            className={styles['nav-logo']} 
-            onClick={() => navigate('/')} 
-            style={{ cursor: 'pointer' }} 
+          <img
+            src={process.env.PUBLIC_URL + '/images/landingpage/logo.png'}
+            alt="CITADA Logo"
+            className={styles['nav-logo']}
+            onClick={() => navigate('/')}
+            style={{ cursor: 'pointer' }}
           />
           {mainNavItems.map(item => (
-            <button key={item.name} className={styles['nav-btn']} onClick={() => navigate(item.path)}>
+            <button
+              key={item.name}
+              className={styles['nav-btn']}
+              onClick={() => navigate(item.path)}
+            >
               {item.name}
             </button>
           ))}
         </div>
         <div className={styles['nav-section']}>
           {rightNavItems.map(item => (
-            <button key={item.name} className={styles['nav-btn']} onClick={() => navigate(item.path)}>
+            <button
+              key={item.name}
+              className={styles['nav-btn']}
+              onClick={() => navigate(item.path)}
+            >
               {item.name}
             </button>
           ))}
@@ -98,6 +113,12 @@ const EditingPostProductionServicesPage = () => {
         </div>
       </nav>
 
+      {/* Welcome Section */}
+      <div className={styles['welcome-section']}>
+        <h1 className={styles['welcome-text']}>Editing & Post-Production Services</h1>
+      </div>
+
+      {/* Toolbar: Search, Filter, Sort */}
       <div className={styles['hotels-toolbar']}>
         <input
           className={styles['search-input']}
@@ -107,9 +128,9 @@ const EditingPostProductionServicesPage = () => {
           onChange={e => setSearch(e.target.value)}
         />
         <div className={styles['filter-sort-group']}>
-          <select 
-            className={styles['sort-select']} 
-            value={sort} 
+          <select
+            className={styles['sort-select']}
+            value={sort}
             onChange={e => setSort(e.target.value)}
           >
             <option value="name">Sort by Name</option>
@@ -118,27 +139,32 @@ const EditingPostProductionServicesPage = () => {
         </div>
       </div>
 
+      {/* Suppliers Grid */}
       <div className={styles['hotels-grid']}>
-        {filteredServices.length === 0 ? (
+        {loading ? (
+          <div style={{ color: '#441752', fontWeight: 500, fontSize: 18, marginTop: 40 }}>Loading editing & post-production services...</div>
+        ) : error ? (
+          <div style={{ color: '#d32f2f', fontWeight: 500, fontSize: 18, marginTop: 40 }}>{error}</div>
+        ) : filtered.length === 0 ? (
           <div style={{ color: '#441752', fontWeight: 500, fontSize: 18, marginTop: 40 }}>
-            No services found.
+            {suppliers.length === 0 ? 'No editing & post-production services registered yet.' : 'No editing & post-production services found matching your search.'}
           </div>
         ) : (
-          filteredServices.map((service, idx) => (
-            <div 
-              key={idx} 
-              className={styles['hotel-card']} 
+          filtered.map((supplier, idx) => (
+            <div
+              key={supplier.id || idx}
+              className={styles['hotel-card']}
               style={{ cursor: 'pointer' }}
-              onClick={() => navigate('/SuppliersProfile')}
+              onClick={() => navigate('/SuppliersProfile', { state: { supplier: supplier } })}
             >
-              <img 
-                src={process.env.PUBLIC_URL + service.image} 
-                alt={service.name} 
-                className={styles['hotel-image']} 
+              <img
+                src={process.env.PUBLIC_URL + supplier.image}
+                alt={supplier.name}
+                className={styles['hotel-image']}
               />
-              <h2 className={styles['hotel-name']}>{service.name}</h2>
-              <div className={styles['hotel-location']}>{service.location}</div>
-              <div className={styles['hotel-rating']}>Rating: {service.rating} ⭐</div>
+              <h2 className={styles['hotel-name']}>{supplier.name}</h2>
+              <div className={styles['hotel-location']}>{supplier.location}</div>
+              <div className={styles['hotel-rating']}>Rating: {supplier.rating.toFixed(1)} ⭐</div>
             </div>
           ))
         )}

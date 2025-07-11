@@ -1,60 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import UserProfile from './UserProfile';
 import styles from './HotelsListPage.module.css';
+import { supabase } from '../supabaseClient';
 
-// Dummy data for Circus Acts
-const circusActsData = [
-  { 
-    name: 'Aerial Acrobatics', 
-    location: 'Downtown', 
-    rating: 4.8, 
-    image: '/images/venues/21.png',
-
-  },
-  { 
-    name: 'Fire Circus', 
-    location: 'City Center', 
-    rating: 4.9, 
-    image: '/images/venues/21.png',
-
-  },
-  { 
-    name: 'Juggle Masters', 
-    location: 'Uptown', 
-    rating: 4.7, 
-    image: '/images/venues/21.png',
-
-  },
-  { 
-    name: 'Extreme Stunts', 
-    location: 'West End', 
-    rating: 4.6, 
-    image: '/images/venues/21.png',
-
-  },
-  { 
-    name: 'Contortion Wonders', 
-    location: 'East District', 
-    rating: 4.8, 
-    image: '/images/venues/21.png',
-
-  },
-  { 
-    name: 'Wheel of Death', 
-    location: 'Theater District', 
-    rating: 4.7, 
-    image: '/images/venues/21.png',
-
-  },
-];
+// Default image for circus act suppliers
+const DEFAULT_CIRCUS_IMAGE = '/images/venues/7.png';
 
 const mainNavItems = [
   { name: 'Home', path: '/SuppliersPage' },
   { name: 'Events', path: '/Events' },
   { name: 'Messages', path: '/MessagesPage' },
 ];
-
 const rightNavItems = [
   { name: 'My Work', path: '/my-work' },
   { name: 'My Team', path: '/my-team' },
@@ -63,40 +20,92 @@ const rightNavItems = [
 const CircusActsPage = () => {
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState('name');
+  const [suppliers, setSuppliers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
+  // Fetch circus act suppliers from Supabase
+  useEffect(() => {
+    fetchSuppliers();
+  }, []);
+
+  const fetchSuppliers = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('service_type', 'Circus Acts')
+        .eq('user_type', 'supplier');
+
+      if (error) {
+        console.error('Error fetching circus act suppliers:', error);
+        setError('Failed to load circus act suppliers');
+        return;
+      }
+
+      // Transform data to match expected format
+      const transformedData = data.map(supplier => ({
+        id: supplier.id,
+        name: supplier.company_name || supplier.full_name || 'Circus Act',
+        location: supplier.address || 'Location not specified',
+        rating: 4.0 + (Math.random() * 1), // Random rating between 4.0-5.0 for now
+        image: DEFAULT_CIRCUS_IMAGE,
+        email: supplier.email,
+        phone: supplier.phone || 'Not provided'
+      }));
+
+      setSuppliers(transformedData);
+      console.log('Fetched circus act suppliers:', transformedData);
+    } catch (err) {
+      console.error('Error in fetchSuppliers:', err);
+      setError('Failed to load circus act suppliers');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Filtering and sorting logic
-  let filteredActs = circusActsData.filter(act =>
-    act.name.toLowerCase().includes(search.toLowerCase()) ||
-    act.location.toLowerCase().includes(search.toLowerCase())
+  let filtered = suppliers.filter(supplier =>
+    supplier.name.toLowerCase().includes(search.toLowerCase()) ||
+    supplier.location.toLowerCase().includes(search.toLowerCase())
   );
   
   if (sort === 'name') {
-    filteredActs = filteredActs.sort((a, b) => a.name.localeCompare(b.name));
+    filtered = filtered.sort((a, b) => a.name.localeCompare(b.name));
   } else if (sort === 'rating') {
-    filteredActs = filteredActs.sort((a, b) => b.rating - a.rating);
+    filtered = filtered.sort((a, b) => b.rating - a.rating);
   }
 
   return (
     <div className={styles['app-container']}>
       <nav className={styles['top-nav']}>
         <div className={styles['nav-section']}>
-          <img 
-            src={process.env.PUBLIC_URL + '/images/landingpage/logo.png'} 
-            alt="CITADA Logo" 
-            className={styles['nav-logo']} 
-            onClick={() => navigate('/')} 
-            style={{ cursor: 'pointer' }} 
+          <img
+            src={process.env.PUBLIC_URL + '/images/landingpage/logo.png'}
+            alt="CITADA Logo"
+            className={styles['nav-logo']}
+            onClick={() => navigate('/')}
+            style={{ cursor: 'pointer' }}
           />
           {mainNavItems.map(item => (
-            <button key={item.name} className={styles['nav-btn']} onClick={() => navigate(item.path)}>
+            <button
+              key={item.name}
+              className={styles['nav-btn']}
+              onClick={() => navigate(item.path)}
+            >
               {item.name}
             </button>
           ))}
         </div>
         <div className={styles['nav-section']}>
           {rightNavItems.map(item => (
-            <button key={item.name} className={styles['nav-btn']} onClick={() => navigate(item.path)}>
+            <button
+              key={item.name}
+              className={styles['nav-btn']}
+              onClick={() => navigate(item.path)}
+            >
               {item.name}
             </button>
           ))}
@@ -104,6 +113,12 @@ const CircusActsPage = () => {
         </div>
       </nav>
 
+      {/* Welcome Section */}
+      <div className={styles['welcome-section']}>
+        <h1 className={styles['welcome-text']}>Circus Acts</h1>
+      </div>
+
+      {/* Toolbar: Search, Filter, Sort */}
       <div className={styles['hotels-toolbar']}>
         <input
           className={styles['search-input']}
@@ -113,9 +128,9 @@ const CircusActsPage = () => {
           onChange={e => setSearch(e.target.value)}
         />
         <div className={styles['filter-sort-group']}>
-          <select 
-            className={styles['sort-select']} 
-            value={sort} 
+          <select
+            className={styles['sort-select']}
+            value={sort}
             onChange={e => setSort(e.target.value)}
           >
             <option value="name">Sort by Name</option>
@@ -124,27 +139,32 @@ const CircusActsPage = () => {
         </div>
       </div>
 
+      {/* Suppliers Grid */}
       <div className={styles['hotels-grid']}>
-        {filteredActs.length === 0 ? (
+        {loading ? (
+          <div style={{ color: '#441752', fontWeight: 500, fontSize: 18, marginTop: 40 }}>Loading circus acts...</div>
+        ) : error ? (
+          <div style={{ color: '#d32f2f', fontWeight: 500, fontSize: 18, marginTop: 40 }}>{error}</div>
+        ) : filtered.length === 0 ? (
           <div style={{ color: '#441752', fontWeight: 500, fontSize: 18, marginTop: 40 }}>
-            No circus acts found.
+            {suppliers.length === 0 ? 'No circus acts registered yet.' : 'No circus acts found matching your search.'}
           </div>
         ) : (
-          filteredActs.map((act, idx) => (
-            <div 
-              key={idx} 
-              className={styles['hotel-card']} 
+          filtered.map((supplier, idx) => (
+            <div
+              key={supplier.id || idx}
+              className={styles['hotel-card']}
               style={{ cursor: 'pointer' }}
-              onClick={() => navigate('/SuppliersProfile')}
+              onClick={() => navigate('/SuppliersProfile', { state: { supplier: supplier } })}
             >
-              <img 
-                src={process.env.PUBLIC_URL + act.image} 
-                alt={act.name} 
-                className={styles['hotel-image']} 
+              <img
+                src={process.env.PUBLIC_URL + supplier.image}
+                alt={supplier.name}
+                className={styles['hotel-image']}
               />
-              <h2 className={styles['hotel-name']}>{act.name}</h2>
-              <div className={styles['hotel-location']}>{act.location}</div>
-              <div className={styles['hotel-rating']}>Rating: {act.rating} ⭐</div>
+              <h2 className={styles['hotel-name']}>{supplier.name}</h2>
+              <div className={styles['hotel-location']}>{supplier.location}</div>
+              <div className={styles['hotel-rating']}>Rating: {supplier.rating.toFixed(1)} ⭐</div>
             </div>
           ))
         )}

@@ -4,8 +4,8 @@ import UserProfile from './UserProfile';
 import styles from './HotelsListPage.module.css';
 import { supabase } from '../supabaseClient';
 
-// Default image for AR suppliers
-const DEFAULT_AR_IMAGE = '/images/venues/2.png';
+// Default image for cleaning services
+const DEFAULT_CLEANING_IMAGE = '/images/venues/14.png';
 
 const mainNavItems = [
   { name: 'Home', path: '/SuppliersPage' },
@@ -17,7 +17,7 @@ const rightNavItems = [
   { name: 'My Team', path: '/my-team' },
 ];
 
-const AugmentedRealityPage = () => {
+const CleaningServicePage = () => {
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState('name');
   const [suppliers, setSuppliers] = useState([]);
@@ -25,7 +25,7 @@ const AugmentedRealityPage = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  // Fetch AR suppliers from Supabase
+  // Fetch cleaning services from Supabase
   useEffect(() => {
     fetchSuppliers();
   }, []);
@@ -36,31 +36,31 @@ const AugmentedRealityPage = () => {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('service_type', 'Augmented Reality (AR)')
+        .eq('service_type', 'Cleaning Service')
         .eq('user_type', 'supplier');
 
       if (error) {
-        console.error('Error fetching AR suppliers:', error);
-        setError('Failed to load AR suppliers');
+        console.error('Error fetching cleaning services:', error);
+        setError('Failed to load cleaning services');
         return;
       }
 
       // Transform data to match expected format
       const transformedData = data.map(supplier => ({
         id: supplier.id,
-        name: supplier.company_name || supplier.full_name || 'AR Service Provider',
+        name: supplier.company_name || supplier.full_name || 'Cleaning Service',
         location: supplier.address || 'Location not specified',
         rating: 4.0 + (Math.random() * 1), // Random rating between 4.0-5.0 for now
-        image: DEFAULT_AR_IMAGE,
+        image: DEFAULT_CLEANING_IMAGE,
         email: supplier.email,
         phone: supplier.phone || 'Not provided'
       }));
 
       setSuppliers(transformedData);
-      console.log('Fetched AR suppliers:', transformedData);
+      console.log('Fetched cleaning services:', transformedData);
     } catch (err) {
       console.error('Error in fetchSuppliers:', err);
-      setError('Failed to load AR suppliers');
+      setError('Failed to load cleaning services');
     } finally {
       setLoading(false);
     }
@@ -115,7 +115,7 @@ const AugmentedRealityPage = () => {
 
       {/* Welcome Section */}
       <div className={styles['welcome-section']}>
-        <h1 className={styles['welcome-text']}>Augmented Reality (AR) Services</h1>
+        <h1 className={styles['welcome-text']}>Cleaning Services</h1>
       </div>
 
       {/* Toolbar: Search, Filter, Sort */}
@@ -123,7 +123,7 @@ const AugmentedRealityPage = () => {
         <input
           className={styles['search-input']}
           type="text"
-          placeholder="Search AR service providers..."
+          placeholder="Search cleaning services..."
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
@@ -142,12 +142,12 @@ const AugmentedRealityPage = () => {
       {/* Suppliers Grid */}
       <div className={styles['hotels-grid']}>
         {loading ? (
-          <div style={{ color: '#441752', fontWeight: 500, fontSize: 18, marginTop: 40 }}>Loading AR service providers...</div>
+          <div style={{ color: '#441752', fontWeight: 500, fontSize: 18, marginTop: 40 }}>Loading cleaning services...</div>
         ) : error ? (
           <div style={{ color: '#d32f2f', fontWeight: 500, fontSize: 18, marginTop: 40 }}>{error}</div>
         ) : filtered.length === 0 ? (
           <div style={{ color: '#441752', fontWeight: 500, fontSize: 18, marginTop: 40 }}>
-            {suppliers.length === 0 ? 'No AR service providers registered yet.' : 'No AR service providers found matching your search.'}
+            {suppliers.length === 0 ? 'No cleaning services registered yet.' : 'No cleaning services found matching your search.'}
           </div>
         ) : (
           filtered.map((supplier, idx) => (
@@ -173,4 +173,4 @@ const AugmentedRealityPage = () => {
   );
 };
 
-export default AugmentedRealityPage;
+export default CleaningServicePage; 

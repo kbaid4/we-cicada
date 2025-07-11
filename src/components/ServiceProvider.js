@@ -53,7 +53,7 @@ const ServiceProvider = () => {
     { name: 'Event Rentals & Furniture Suppliers', image: '13.png' , path: '/Furniture'},
     { name: 'Photographers & Videographers', image: '14.png' , path: '/PhotoVid'},
     { name: 'Transportation Services', image: '15.png' , path: '/Transportation'},
-    { name: 'Cleaning Services', image: '16.png'}
+    { name: 'Cleaning Services', image: '16.png', path: '/cleaning-services'}
   ];
 
   const handleCreateEventClick = () => {
