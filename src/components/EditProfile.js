@@ -30,8 +30,12 @@ const EditProfile = () => {
   const [editedData, setEditedData] = useState({
     description: '',
     service_type: '',
+<<<<<<< HEAD
     promotions: { title: '', description: '' },
     speciality: ''
+=======
+    promotions: { title: '', description: '' }
+>>>>>>> 882fcb9e9298ec1d5b1f862c729171f7b1ef76f0
   });
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
@@ -53,8 +57,12 @@ const EditProfile = () => {
             setEditedData({
               description: profile.description || '',
               service_type: profile.service_type || '',
+<<<<<<< HEAD
               promotions: profile.promotions || { title: '', description: '' },
               speciality: profile.speciality || ''
+=======
+              promotions: profile.promotions || { title: '', description: '' }
+>>>>>>> 882fcb9e9298ec1d5b1f862c729171f7b1ef76f0
             });
           }
         }
@@ -79,7 +87,10 @@ const EditProfile = () => {
           description: editedData.description,
           service_type: editedData.service_type,
           promotions: editedData.promotions,
+<<<<<<< HEAD
           speciality: editedData.speciality,
+=======
+>>>>>>> 882fcb9e9298ec1d5b1f862c729171f7b1ef76f0
           updated_at: new Date().toISOString()
         })
         .eq('id', user.id);
@@ -160,7 +171,11 @@ const EditProfile = () => {
           <div style={styles.heroContent} className="edit-profile-hero-content">
             <div style={styles.heroHeader} className="edit-profile-hero-header">
               <h1 style={styles.heroTitle}>
+<<<<<<< HEAD
                 {userData?.company_name || userData?.full_name || userData?.email || 'Loading...'}
+=======
+                {userData?.full_name || userData?.company_name || 'Loading...'}
+>>>>>>> 882fcb9e9298ec1d5b1f862c729171f7b1ef76f0
               </h1>
               <div style={styles.editButtons}>
                 {!isEditing ? (
@@ -186,8 +201,12 @@ const EditProfile = () => {
                         setEditedData({
                           description: userData?.description || '',
                           service_type: userData?.service_type || '',
+<<<<<<< HEAD
                           promotions: userData?.promotions || { title: '', description: '' },
                           speciality: userData?.speciality || ''
+=======
+                          promotions: userData?.promotions || { title: '', description: '' }
+>>>>>>> 882fcb9e9298ec1d5b1f862c729171f7b1ef76f0
                         });
                       }}
                     >
@@ -285,6 +304,7 @@ const EditProfile = () => {
             </div>
           </div>
 
+<<<<<<< HEAD
           {/* Speciality Section */}
           <div style={styles.column} className="edit-profile-col">
             <h3 style={styles.sectionTitle}>Speciality</h3>
@@ -312,6 +332,8 @@ const EditProfile = () => {
             </div>
           </div>
 
+=======
+>>>>>>> 882fcb9e9298ec1d5b1f862c729171f7b1ef76f0
           {/* Ratings Section */}
           <div style={styles.column} className="edit-profile-col">
             <h3 style={styles.sectionTitle}>Ratings</h3>
@@ -324,12 +346,15 @@ const EditProfile = () => {
         </div>
       </div>
       <style>{`
+<<<<<<< HEAD
         @media (max-width: 1200px) {
           .edit-profile-grid {
             grid-template-columns: 1fr 1fr !important;
             gap: 1.5rem !important;
           }
         }
+=======
+>>>>>>> 882fcb9e9298ec1d5b1f862c729171f7b1ef76f0
         @media (max-width: 900px) {
           .edit-profile-content {
             padding: 1rem !important;
@@ -567,7 +592,11 @@ const styles = {
   },
   gridContainer: {
     display: 'grid',
+<<<<<<< HEAD
     gridTemplateColumns: 'repeat(4, 1fr)',
+=======
+    gridTemplateColumns: 'repeat(3, 1fr)',
+>>>>>>> 882fcb9e9298ec1d5b1f862c729171f7b1ef76f0
     gap: '2rem',
   },
   column: {

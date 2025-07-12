@@ -264,7 +264,7 @@ const CreateEventPage = () => {
           if (option && typeof option === 'object' && option.name && option.email) {
             return (
               <option key={option.email} value={option.email}>
-                {option.name}
+                {option.name} ({option.email})
               </option>
             );
           }

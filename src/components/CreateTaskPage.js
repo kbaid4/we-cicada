@@ -322,7 +322,7 @@ const CreateTaskPage = () => {
                     {mySuppliers.length > 0 && (
                       <optgroup label="My Suppliers">
                         {mySuppliers.map(supplier => {
-                          const displayName = supplier.company_name || supplier.full_name || supplier.email || `Supplier ${supplier.id}`;
+                          const displayName = supplier.full_name || supplier.company_name || supplier.email || `Supplier ${supplier.id}`;
                           const serviceType = supplier.service_type;
                           return (
                             <option key={supplier.id} value={supplier.id}>{serviceType ? `${displayName} (${serviceType})` : displayName}</option>
@@ -333,7 +333,7 @@ const CreateTaskPage = () => {
                     {signedUpSuppliers.length > 0 && (
                       <optgroup label="Signed Up Suppliers">
                         {signedUpSuppliers.map(supplier => {
-                          const displayName = supplier.company_name || supplier.full_name || supplier.email || `Supplier ${supplier.id}`;
+                          const displayName = supplier.full_name || supplier.company_name || supplier.email || `Supplier ${supplier.id}`;
                           const serviceType = supplier.service_type;
                           return (
                             <option key={supplier.id} value={supplier.id}>
@@ -346,17 +346,15 @@ const CreateTaskPage = () => {
                     {invitedSuppliers.length > 0 && (
                       <optgroup label="Invited Suppliers">
                         {invitedSuppliers.map(supplier => {
-                          // Use company_name or full_name if available (registered), otherwise just email
+                          // Use full_name or company_name if available (registered), otherwise just email
                           const displayName = supplier.isRegistered ?
-                            (supplier.company_name || supplier.full_name || supplier.email) :
+                            (supplier.full_name || supplier.company_name || supplier.email) :
                             supplier.email;
                           const serviceType = supplier.service_type;
-                            
                           // Show registration status
                           const statusText = supplier.isRegistered ?
                             "(Registered)" : 
                             "(Invited)";
-                            
                           return (
                             <option key={supplier.id} value={supplier.id}>
                               {serviceType ? `${displayName} (${serviceType})` : displayName} {statusText}

@@ -98,6 +98,7 @@ const MessagesPage = () => {
               .eq('event_id', event.id);
               
             if (invites && invites.length > 0) {
+<<<<<<< HEAD
               // Fetch supplier profiles to get company_name
               const supplierEmails = invites.map(invite => invite.supplier_email);
               const { data: supplierProfiles } = await supabase
@@ -119,6 +120,14 @@ const MessagesPage = () => {
                   supplierFullName: supplierProfile?.full_name
                 };
               });
+=======
+              const eventPairs = invites.map(invite => ({
+                eventId: event.id,
+                eventName: event.name,
+                supplierName: invite.supplier_name || invite.supplier_email,
+                supplierEmail: invite.supplier_email
+              }));
+>>>>>>> 882fcb9e9298ec1d5b1f862c729171f7b1ef76f0
               pairs = [...pairs, ...eventPairs];
             }
           }
@@ -696,6 +705,7 @@ const MessagesPage = () => {
               onClick={() => setSelectedPair(pair)}
             >
               <div style={{fontWeight:'bold'}}>{pair.eventName}</div>
+<<<<<<< HEAD
               <div style={{fontSize:'14px', color:'#441752'}}>
                 {pair.supplierCompanyName ? (
                   <>
@@ -706,6 +716,9 @@ const MessagesPage = () => {
                   pair.supplierName
                 )}
               </div>
+=======
+              <div style={{fontSize:'14px', color:'#441752'}}>{pair.supplierName}</div>
+>>>>>>> 882fcb9e9298ec1d5b1f862c729171f7b1ef76f0
             </div>
           ))}
         </div>
@@ -717,6 +730,7 @@ const MessagesPage = () => {
             {selectedPair ? (
               <>
                 <span style={{fontWeight:600}}>{selectedPair.eventName}</span>
+<<<<<<< HEAD
                 <span style={{fontWeight:400, marginLeft:8}}>/ {
                   selectedPair.supplierCompanyName ? (
                     <>
@@ -727,6 +741,9 @@ const MessagesPage = () => {
                     selectedPair.supplierName
                   )
                 }</span>
+=======
+                <span style={{fontWeight:400, marginLeft:8}}>/ {selectedPair.supplierName}</span>
+>>>>>>> 882fcb9e9298ec1d5b1f862c729171f7b1ef76f0
               </>
             ) : 'Select a conversation'}
           </div>

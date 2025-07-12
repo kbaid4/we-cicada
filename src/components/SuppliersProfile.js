@@ -74,8 +74,11 @@ const SuppliersProfile = () => {
           setSupplierData({
             id: supplier.id,
             name: supplier.company_name || supplier.full_name,
+<<<<<<< HEAD
             company_name: supplier.company_name,
             full_name: supplier.full_name,
+=======
+>>>>>>> 882fcb9e9298ec1d5b1f862c729171f7b1ef76f0
             location: supplier.address,
             description: supplier.description,
             service_type: supplier.service_type,
@@ -97,8 +100,11 @@ const SuppliersProfile = () => {
           setSupplierData({
             id: supplier.id,
             name: supplier.company_name || supplier.full_name,
+<<<<<<< HEAD
             company_name: supplier.company_name,
             full_name: supplier.full_name,
+=======
+>>>>>>> 882fcb9e9298ec1d5b1f862c729171f7b1ef76f0
             location: supplier.address,
             description: supplier.description,
             service_type: supplier.service_type,
@@ -133,8 +139,11 @@ const SuppliersProfile = () => {
               setSupplierData({
                 id: updatedProfile.id,
                 name: updatedProfile.company_name || updatedProfile.full_name,
+<<<<<<< HEAD
                 company_name: updatedProfile.company_name,
                 full_name: updatedProfile.full_name,
+=======
+>>>>>>> 882fcb9e9298ec1d5b1f862c729171f7b1ef76f0
                 location: updatedProfile.address,
                 description: updatedProfile.description,
                 service_type: updatedProfile.service_type,
@@ -271,7 +280,11 @@ const SuppliersProfile = () => {
           <div style={styles.heroContent} className="suppliers-profile-herocontent">
             <div style={styles.heroHeader}>
               <h1 style={styles.heroTitle} className="suppliers-profile-herotitle">
+<<<<<<< HEAD
                 {supplierData.company_name || supplierData.full_name || 'Supplier Name'}
+=======
+                {supplierData.name || 'Supplier Name'}
+>>>>>>> 882fcb9e9298ec1d5b1f862c729171f7b1ef76f0
               </h1>
               <div style={styles.buttonGroup} className="suppliers-profile-buttongroup">
                 <button 

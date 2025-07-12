@@ -94,10 +94,17 @@ const MyTeam = () => {
   };
 
   // (No debug logs needed for removePlanner)
+<<<<<<< HEAD
   const removePlanner = async (email) => {
     if (!adminId) return;
     try {
       const plannerToRemove = planners.find(p => p.email === email);
+=======
+  const removePlanner = async (name, email) => {
+    if (!adminId) return;
+    try {
+      const plannerToRemove = planners.find(p => p.name === name && p.email === email);
+>>>>>>> 882fcb9e9298ec1d5b1f862c729171f7b1ef76f0
       if (plannerToRemove && plannerToRemove.id) {
         await import('../supabaseClient').then(m => m.supabase
           .from('planners')
@@ -106,13 +113,21 @@ const MyTeam = () => {
         );
       }
       const updated = planners.filter(
+<<<<<<< HEAD
         (p) => !(p && typeof p === 'object' && p.email === email)
+=======
+        (p) => !(p && typeof p === 'object' && p.name === name && p.email === email)
+>>>>>>> 882fcb9e9298ec1d5b1f862c729171f7b1ef76f0
       );
       setPlanners(updated);
     } catch {
       // fallback: just update UI
       const updated = planners.filter(
+<<<<<<< HEAD
         (p) => !(p && typeof p === 'object' && p.email === email)
+=======
+        (p) => !(p && typeof p === 'object' && p.name === name && p.email === email)
+>>>>>>> 882fcb9e9298ec1d5b1f862c729171f7b1ef76f0
       );
       setPlanners(updated);
     }
@@ -205,10 +220,17 @@ const MyTeam = () => {
                   <tbody>
                     {manualPlanners.map((planner, idx) => (
                       <tr key={idx + '-' + planner.email}>
+<<<<<<< HEAD
                         <td>{planner.company_name || planner.full_name || planner.email}</td>
                         <td>{planner.email}</td>
                         <td>
                           <button className="remove-btn" onClick={() => removePlanner(planner.email)}>
+=======
+                        <td>{planner.name}</td>
+                        <td>{planner.email}</td>
+                        <td>
+                          <button className="remove-btn" onClick={() => removePlanner(planner.name, planner.email)}>
+>>>>>>> 882fcb9e9298ec1d5b1f862c729171f7b1ef76f0
                     Remove
                   </button>
                         </td>
@@ -232,7 +254,11 @@ const MyTeam = () => {
                   <tbody>
                     {connections.map((conn, idx) => (
                       <tr key={idx + '-' + conn.email}>
+<<<<<<< HEAD
                         <td>{conn.company_name || conn.full_name || conn.email}</td>
+=======
+                        <td>{conn.name}</td>
+>>>>>>> 882fcb9e9298ec1d5b1f862c729171f7b1ef76f0
                         <td>{conn.email}</td>
                       </tr>
                     ))}

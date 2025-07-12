@@ -220,6 +220,7 @@ const SupplierMessagesPage = () => {
           }
           
           if (eventData) {
+<<<<<<< HEAD
             // Fetch admin profile to get company_name
             let adminProfile = null;
             const adminId = eventData.admin_id || invite.invited_by_admin_id || invite.admin_id;
@@ -243,6 +244,13 @@ const SupplierMessagesPage = () => {
               adminName: adminName,
               adminCompanyName: adminProfile?.company_name,
               adminFullName: adminProfile?.full_name,
+=======
+            relevantEvents.push({
+              eventId: eventData.id,
+              eventName: eventData.name || `Event (${eventData.id.substring(0, 8)}...)`,
+              adminId: eventData.admin_id || invite.invited_by_admin_id || invite.admin_id || '',
+              adminName: 'Event Organizer',
+>>>>>>> 882fcb9e9298ec1d5b1f862c729171f7b1ef76f0
               supplierEmail: invite.supplier_email,
               supplierName: invite.supplier_name || invite.supplier_email
             });
@@ -787,6 +795,7 @@ const SupplierMessagesPage = () => {
                 className={`event ${selectedEvent?.eventId === ev.eventId ? 'active' : ''}`}
                 onClick={() => setSelectedEvent(ev)}
               >
+<<<<<<< HEAD
                 <div style={{fontWeight:'bold'}}>{ev.eventName}</div>
                 <div style={{fontSize:'14px', color:'#441752'}}>
                   {ev.adminCompanyName ? (
@@ -798,6 +807,9 @@ const SupplierMessagesPage = () => {
                     ev.adminName
                   )}
                 </div>
+=======
+                {ev.eventName}
+>>>>>>> 882fcb9e9298ec1d5b1f862c729171f7b1ef76f0
               </div>
             ))}
           </div>
@@ -812,6 +824,7 @@ const SupplierMessagesPage = () => {
               </div>
             ) : (
               <div>
+<<<<<<< HEAD
                 {/* Chat Header */}
                 <div className="chat-header" style={{
                   fontSize: '18px',
@@ -833,6 +846,8 @@ const SupplierMessagesPage = () => {
                   }
                 </div>
                 
+=======
+>>>>>>> 882fcb9e9298ec1d5b1f862c729171f7b1ef76f0
                 {/* Message List */}
                 <div className="message-list">
                   {filteredMessages.map((msg, index) => {
