@@ -98,8 +98,7 @@ const MessagesPage = () => {
               .eq('event_id', event.id);
               
             if (invites && invites.length > 0) {
-<<<<<<< HEAD
-              // Fetch supplier profiles to get company_name
+              // Fetch supplier profiles to get full_name/company_name
               const supplierEmails = invites.map(invite => invite.supplier_email);
               const { data: supplierProfiles } = await supabase
                 .from('profiles')
@@ -109,8 +108,7 @@ const MessagesPage = () => {
               
               const eventPairs = invites.map(invite => {
                 const supplierProfile = supplierProfiles?.find(profile => profile.email === invite.supplier_email);
-                const displayName = supplierProfile?.company_name || supplierProfile?.full_name || invite.supplier_name || invite.supplier_email;
-                
+                const displayName = supplierProfile?.full_name || supplierProfile?.company_name || invite.supplier_name || invite.supplier_email;
                 return {
                   eventId: event.id,
                   eventName: event.name,
@@ -120,14 +118,6 @@ const MessagesPage = () => {
                   supplierFullName: supplierProfile?.full_name
                 };
               });
-=======
-              const eventPairs = invites.map(invite => ({
-                eventId: event.id,
-                eventName: event.name,
-                supplierName: invite.supplier_name || invite.supplier_email,
-                supplierEmail: invite.supplier_email
-              }));
->>>>>>> 882fcb9e9298ec1d5b1f862c729171f7b1ef76f0
               pairs = [...pairs, ...eventPairs];
             }
           }
@@ -705,20 +695,9 @@ const MessagesPage = () => {
               onClick={() => setSelectedPair(pair)}
             >
               <div style={{fontWeight:'bold'}}>{pair.eventName}</div>
-<<<<<<< HEAD
               <div style={{fontSize:'14px', color:'#441752'}}>
-                {pair.supplierCompanyName ? (
-                  <>
-                    <span style={{fontWeight:'bold'}}>{pair.supplierCompanyName}</span>
-                    <span style={{fontSize:'12px', color:'#441752'}}> • {pair.supplierFullName || pair.supplierEmail}</span>
-                  </>
-                ) : (
-                  pair.supplierName
-                )}
+                {pair.supplierFullName || pair.supplierCompanyName || pair.supplierName}
               </div>
-=======
-              <div style={{fontSize:'14px', color:'#441752'}}>{pair.supplierName}</div>
->>>>>>> 882fcb9e9298ec1d5b1f862c729171f7b1ef76f0
             </div>
           ))}
         </div>
@@ -730,20 +709,9 @@ const MessagesPage = () => {
             {selectedPair ? (
               <>
                 <span style={{fontWeight:600}}>{selectedPair.eventName}</span>
-<<<<<<< HEAD
                 <span style={{fontWeight:400, marginLeft:8}}>/ {
-                  selectedPair.supplierCompanyName ? (
-                    <>
-                      <span style={{fontWeight:'bold'}}>{selectedPair.supplierCompanyName}</span>
-                      <span style={{fontSize:'14px', color:'#441752'}}> ({selectedPair.supplierFullName || selectedPair.supplierEmail})</span>
-                    </>
-                  ) : (
-                    selectedPair.supplierName
-                  )
+                  selectedPair.supplierFullName || selectedPair.supplierCompanyName || selectedPair.supplierName
                 }</span>
-=======
-                <span style={{fontWeight:400, marginLeft:8}}>/ {selectedPair.supplierName}</span>
->>>>>>> 882fcb9e9298ec1d5b1f862c729171f7b1ef76f0
               </>
             ) : 'Select a conversation'}
           </div>
