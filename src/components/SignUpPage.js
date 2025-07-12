@@ -148,10 +148,7 @@ const SignUpPage = () => {
               .from('profiles')
               .update({ 
                 full_name: formData.name,
-<<<<<<< HEAD
                 company_name: formData.companyname,
-=======
->>>>>>> 882fcb9e9298ec1d5b1f862c729171f7b1ef76f0
                 service_type: formData.eventType,
                 updated_at: new Date().toISOString()
               })

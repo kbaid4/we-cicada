@@ -169,17 +169,10 @@ const SupplierTeam = () => {
 
   // Optionally, update/remove logic to delete from Supabase as well if needed
   // (No debug logs needed for removeLiaison)
-<<<<<<< HEAD
-  const removeLiaison = async (email) => {
-    if (!supplierId) return;
-    try {
-      const liaisonToRemove = liaisons.find(l => l.email === email);
-=======
   const removeLiaison = async (name, email) => {
     if (!supplierId) return;
     try {
       const liaisonToRemove = liaisons.find(l => l.name === name && l.email === email);
->>>>>>> 882fcb9e9298ec1d5b1f862c729171f7b1ef76f0
       if (liaisonToRemove && liaisonToRemove.id) {
         await import('../supabaseClient').then(m => m.supabase
           .from('liaisons')
@@ -188,21 +181,13 @@ const SupplierTeam = () => {
         );
       }
       const updated = liaisons.filter(
-<<<<<<< HEAD
-        (l) => !(l && typeof l === 'object' && l.email === email)
-=======
         (l) => !(l && typeof l === 'object' && l.name === name && l.email === email)
->>>>>>> 882fcb9e9298ec1d5b1f862c729171f7b1ef76f0
       );
       setLiaisons(updated);
     } catch {
       // fallback: just update UI
       const updated = liaisons.filter(
-<<<<<<< HEAD
-        (l) => !(l && typeof l === 'object' && l.email === email)
-=======
         (l) => !(l && typeof l === 'object' && l.name === name && l.email === email)
->>>>>>> 882fcb9e9298ec1d5b1f862c729171f7b1ef76f0
       );
       setLiaisons(updated);
     }
@@ -308,17 +293,10 @@ const SupplierTeam = () => {
                   <tbody>
                     {manualConnections.map((liaison, idx) => (
                       <tr key={idx + '-' + liaison.email}>
-<<<<<<< HEAD
-                        <td>{liaison.company_name || liaison.full_name || liaison.name || liaison.email}</td>
-                        <td>{liaison.email}</td>
-                        <td>
-                          <button className="remove-btn" onClick={() => removeLiaison(liaison.email)}>
-=======
                         <td>{liaison.name}</td>
                         <td>{liaison.email}</td>
                         <td>
                           <button className="remove-btn" onClick={() => removeLiaison(liaison.name, liaison.email)}>
->>>>>>> 882fcb9e9298ec1d5b1f862c729171f7b1ef76f0
                             Remove
                           </button>
                         </td>
@@ -342,11 +320,7 @@ const SupplierTeam = () => {
                   <tbody>
                     {connections.map((connection, idx) => (
                       <tr key={idx + '-' + connection.requester_email}>
-<<<<<<< HEAD
-                        <td>{connection.requester_company_name || connection.requester_full_name || connection.requester_name || connection.requester_email}</td>
-=======
                         <td>{connection.requester_name}</td>
->>>>>>> 882fcb9e9298ec1d5b1f862c729171f7b1ef76f0
                         <td>{connection.requester_email}</td>
                       </tr>
                     ))}
